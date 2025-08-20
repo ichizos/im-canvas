@@ -1,40 +1,37 @@
 package example
 
 import "core:fmt"
-import "../imcanvas"
-
-x_add_proc :: #type proc(
-    canvas: ^Canvas,
-    element: ^Element,
-    parent: ^Element,
-)
-
-Element :: struct {
-    data: int,
-    parent: ^Element,
-}
-
-Canvas :: struct {
-    elements: [dynamic]Element
-}
-
-canvas_init :: proc(element: Element) -> ^Canvas {
-    @(static) canvas := Canvas{}
-    free_all(canvas.elements.allocator)
-    canvas.elements = make([dynamic]Element, context.temp_allocator)
-    canvas_append(&canvas, element, nil)
-    return &canvas
-}
-
-canvas_append :: proc(canvas: ^Canvas, element: Element, parent: ^Element) -> ^Element {
-    append_elem(&canvas.elements, element)
-    return &canvas.elements[len(canvas.elements) - 1]
-}
+import imc "../imcanvas"
 
 main :: proc() {
-    canvas : ^Canvas;
-    canvas = canvas_init({data = 0})
-    fmt.printfln("%p", canvas)
-    canvas = canvas_init({data = 1})
-    fmt.printfln("%p", canvas)
+
+    canvas := imc.init()
+
+    if imc.layout_begin({
+        sizing = { .FIXED, .FIXED },
+        rect = { 0, 0, 800, 600 },
+    }) {
+        defer imc.layout_end()
+
+        for i in 0 ..< 3 {
+            if imc.layout_begin({
+                direction = .LEFT_TO_RIGHT
+            }) {
+                defer imc.layout_end()
+
+                for i in 0 ..< 3 {
+                    imc.add_element(imc.Block {
+                        sizing = { .FIXED, .FIXED },
+                        rect = { 0, 0, 50, 50 }
+                    })
+                }
+            }
+        }
+    }
+
+    imc.calculate()
+
+    for element in &canvas.elements {
+        fmt.println(element)
+    }
 }
